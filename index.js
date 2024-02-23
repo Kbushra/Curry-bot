@@ -286,7 +286,7 @@ client.on('interactionCreate', (interaction) =>
                 .setColor('Random')
                 .addFields(
                 {name: '/help', value: '...Youre on it',},
-                {name: '/roles', value: 'Adds rich role if over 40 curry cash, adds spender role if \
+                {name: '/roles', value: 'Adds rich role if over 150 curry cash, adds spender role if \
                 more than 10 items bought. Will not be removed',},
                 {name: '/start', value: 'Used to create your account and learn what commands to try',},
                 {name: '/shop', value: 'The two commands for shop is /shop-buy and /shop-view. Viewing \
@@ -592,7 +592,7 @@ client.on('interactionCreate', (interaction) =>
                             ({name: 'Prestige (prestige in commands)', value: 'Resets progress, but adds an extra .2x multiplier to task income each time. \
                             PRICE: 100 CURRY CASH'})
                         }
-                        else{embed.addFields({name: 'Stocks', value: 'REMOVED'});}
+                        else{embed.addFields({name: 'Prestige', value: 'REMOVED'});}
                         for(var i = 0; i < guildData.customItemnames.length; i++)
                         {
                             let itemname = guildData.customItemnames[i];
@@ -664,7 +664,7 @@ client.on('interactionCreate', (interaction) =>
                         {
                             if(guildData.enableRoles[0])
                             {
-                                if(newData.balance > 40 && newData.roles[0] == false) 
+                                if(newData.balance > 150 && newData.roles[0] == false) 
                                 {
                                     if(interaction.guild.roles.cache.find(r => r.name === "Rich"))
                                     {
