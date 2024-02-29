@@ -73,6 +73,32 @@ const commands =
         ]
     },
     {
+        name: 'edit-task',
+        description: 'Allows admins to change the amount of messages/embeds/days a task requires (must be even)',
+        options: 
+        [
+            {
+                name: 'task',
+                description: 'The task that should be edited',
+                type: ApplicationCommandOptionType.Number,
+                choices: 
+                [
+                    {name: "Speaking", value: 0},
+                    {name: "OG member", value: 1},
+                    {name: "Streak", value: 2},
+                    {name: "Media", value: 3},
+                ],
+                required: true
+            },
+            {
+                name: 'amount',
+                description: 'What the edited value should become (message count, days, days, embed count)',
+                type: ApplicationCommandOptionType.Number,
+                required: true
+            }
+        ]
+    },
+    {
         name: 'add-bonus-task',
         description: 'Allows admins to specify bonus tasks and add them to the list (MAX 5)',
         options:
@@ -264,6 +290,33 @@ const commands =
                 name: 'price',
                 description: 'The price of the added item',
                 type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ]
+    },
+    {
+        name: 'edit-shop',
+        description: 'Allows admins to change the price of shop items',
+        options: 
+        [
+            {
+                name: 'item',
+                description: 'The item that should be edited',
+                type: ApplicationCommandOptionType.Number,
+                choices: 
+                [
+                    {name: 'cash-pass', value: 0},
+                    {name: 'investment', value: 1},
+                    {name: 'stocks', value: 2},
+                    {name: 'taskify', value: 3},
+                    {name: 'prestige', value: 4},
+                ],
+                required: true
+            },
+            {
+                name: 'price',
+                description: 'What the edited item price should become',
+                type: ApplicationCommandOptionType.Number,
                 required: true
             }
         ]

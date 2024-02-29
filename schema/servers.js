@@ -12,6 +12,8 @@ const serverSchema = new mongoose.Schema
     customItemdescs: {type: Array, default: []},
     customItemprices: {type: Array, default: []},
     stockCosts: {type: Number, default: 15},
+    taskRequirements: {type: Array, default: [50, 30, 8, 14]},
+    itemPrices: {type: Array, default: [27, 10, 15, 50, 100]},
 })
 
 const model = mongoose.model("servers", serverSchema);

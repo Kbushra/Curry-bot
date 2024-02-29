@@ -46,6 +46,8 @@ module.exports = (async (client, discord) =>
                 customItemdescs: [],
                 customItemprices: [],
                 stockCosts: 15,
+                taskRequirements: [50, 30, 7, 14],
+                itemPrices: [27, 10, 15, 50, 100],
             });
             newGuildinfo.save();
             console.log('Main server logged');
@@ -77,6 +79,8 @@ client.on('guildCreate', (g) =>
                     customItemdescs: [],
                     customItemprices: [],
                     stockCosts: 15,
+                    taskRequirements: [50, 30, 7, 14],
+                    itemPrices: [27, 10, 15, 50, 100],
                 });
                 newGuildinfo.save();
                 console.log('New server logged');
@@ -112,7 +116,7 @@ client.on('messageCreate', (msg) =>
                 if(guildData.enableTasks[0])
                 {
                     newData.msgCount++;
-                    if(newData.msgCount % (50 * newData.taskMultiply) == 0)
+                    if(newData.msgCount % (guildData.taskRequirements[0] * newData.taskMultiply) == 0)
                     {
                         newData.taskMoney += 5 + newData.speakingAddon;
                         msg.channel.send("<@" + msg.member.id + ">, you have completed the Speaking task for " + (newData.speakingAddon + 5) + " cash!");
@@ -128,7 +132,7 @@ client.on('messageCreate', (msg) =>
                 {
                     if(Date.now() - msg.member.joinedTimestamp >= newData.reqTime * newData.taskMultiply)
                     {
-                        newData.reqTime += 2629746000;
+                        newData.reqTime += guildData.taskRequirements[1] * 86400000;
                         newData.taskMoney += 10 + newData.ogAddon;
                         if(newData.ogAddon != 15)
                         {
@@ -150,7 +154,7 @@ client.on('messageCreate', (msg) =>
                         }
                         else
                         {
-                            guildData.stockCosts = 4;
+                            guildData.stockCosts = guildData.itemPrices[2];
                         }
                         await guildData.save();
                     }
@@ -160,7 +164,7 @@ client.on('messageCreate', (msg) =>
                         {
                             guildData.stockCosts = Math.round(guildData.stockCosts * 0.8);
                         }
-                        else
+                        else if(guildData.stockCosts < 30)
                         {
                             guildData.stockCosts = Math.round(guildData.stockCosts * 1.2);
                         }
@@ -172,7 +176,7 @@ client.on('messageCreate', (msg) =>
                     if(msg.embeds.length > 0)
                     {
                         newData.embedCount++;
-                        if(newData.embedCount == 14 * newData.taskMultiply)
+                        if(newData.embedCount >= guildData.taskRequirements[3] * newData.taskMultiply)
                         {
                             newData.taskMoney += 5 + newData.embedAddon;
                             msg.channel.send("<@" + msg.member.id + ">, you have completed the Media task for " + (newData.embedAddon + 5) + " cash!");
@@ -205,70 +209,35 @@ client.on('interactionCreate', (interaction) =>
                     {
                         if(guildData.enableTasks[2])
                         {
-                            if(newData.taskMultiply == 1)
+                            if(newData.dailyTimer == 0)
                             {
-                                if(newData.dailyTimer == 0)
-                                {
-                                    newData.dailyStreak = 1;
-                                    newData.dailyTimer = Date.now() + 172800000;
-                                    interaction.channel.send("<@" + interaction.member.id + ">, daily streak at "
-                                    + newData.dailyStreak + ", a week and you'll fulfill a task!");
-                                }
-                                else if(newData.dailyTimer - Date.now() <= 0)
-                                {
-                                    interaction.channel.send("<@" + interaction.member.id + ">, your daily streak has expired, \
-                                    so has reset back to one.");
-                                    newData.dailyStreak = 1;
-                                    newData.dailyTimer = Date.now() + 172800000;
-                                }
-                                else if(newData.dailyTimer - Date.now() <= 86400000)
-                                {
-                                    newData.dailyStreak++;
-                                    newData.dailyTimer = Date.now() + 172800000;
-                                    interaction.channel.send("<@" + interaction.member.id + ">, daily streak at "
-                                    + newData.dailyStreak + ", a week and you'll fulfill a task!");
-                                }
-                                if(newData.dailyStreak % 7 == 0)
-                                {
-                                    interaction.channel.send("<@" + interaction.member.id + ">, your daily streak \
-                                    is at a week, meaning you have completed the Streak task for " + (10 + newData.dailyAddon) + " cash!");
-                                    newData.completedTask[2] = true;
-                                    newData.taskMoney += 10 + newData.dailyAddon;
-                                    if(newData.dailyAddon != 20)
-                                    {
-                                        newData.dailyAddon += 2;
-                                    }
-                                }
+                                newData.dailyStreak = 1;
+                                newData.dailyTimer = Date.now() + 172800000;
+                                interaction.channel.send("<@" + interaction.member.id + ">, daily streak at "
+                                + newData.dailyStreak + ", " + (guildData.taskRequirements[2] * newData.taskMultiply) + " days and you'll fulfill a task!");
                             }
-                            else
+                            else if(newData.dailyTimer - Date.now() <= 0)
                             {
-                                if(newData.dailyTimer == 0)
+                                interaction.channel.send("<@" + interaction.member.id + ">, your daily streak has expired, \
+                                so has reset back to one.");
+                                newData.dailyStreak = 1;
+                                newData.dailyTimer = Date.now() + 172800000;
+                            }
+                            else if(newData.dailyTimer - Date.now() <= 86400000)
+                            {
+                                newData.dailyStreak++;
+                                newData.dailyTimer = Date.now() + 172800000;
+                                interaction.channel.send("<@" + interaction.member.id + ">, daily streak at "
+                                + newData.dailyStreak + ", " + (guildData.taskRequirements[2] * newData.taskMultiply) + " days and you'll fulfill a task!");
+                            }
+                            if(newData.dailyStreak % (guildData.taskRequirements[2] * newData.taskMultiply) == 0)
+                            {
+                                interaction.channel.send("<@" + interaction.member.id + ">, your daily streak \
+                                is at " + (guildData.taskRequirements[2] * newData.taskMultiply) + " days, meaning you have completed the Streak task for " + (10 + newData.dailyAddon) + " cash!");
+                                newData.completedTask[2] = true;
+                                newData.taskMoney += 10 + newData.dailyAddon;
+                                if(newData.dailyAddon != 20)
                                 {
-                                    newData.dailyStreak = 1;
-                                    newData.dailyTimer = Date.now() + 172800000;
-                                    interaction.channel.send("<@" + interaction.member.id + ">, daily streak at "
-                                    + newData.dailyStreak + ", 4 days and you'll fulfill a task!");
-                                }
-                                else if(newData.dailyTimer - Date.now() <= 0)
-                                {
-                                    interaction.channel.send("<@" + interaction.member.id + ">, your daily streak has expired, \
-                                    so has reset back to one.");
-                                    newData.dailyStreak = 1;
-                                    newData.dailyTimer = Date.now() + 172800000;
-                                }
-                                else if(newData.dailyTimer - Date.now() <= 86400000)
-                                {
-                                    newData.dailyStreak++;
-                                    newData.dailyTimer = Date.now() + 172800000;
-                                    interaction.channel.send("<@" + interaction.member.id + ">, daily streak at "
-                                    + newData.dailyStreak + ", 4 days and you'll fulfill a task!");
-                                }
-                                if(newData.dailyStreak % 4 == 0)
-                                {
-                                    interaction.channel.send("<@" + interaction.member.id + ">, your daily streak \
-                                    is at 4 days, meaning you have completed the Streak task!");
-                                    newData.completedTask[2] = true;
-                                    newData.taskMoney += 10 + newData.dailyAddon;
                                     newData.dailyAddon += 2;
                                 }
                             }
@@ -396,11 +365,11 @@ client.on('interactionCreate', (interaction) =>
                                 {
                                     if(guildData.enableItems[0])
                                     {
-                                        if(newData.balance >= 27)
+                                        if(newData.balance >= guildData.itemPrices[0])
                                         {
-                                            interaction.editReply('The cash pass has been bought for 27 curry cash!');
+                                            interaction.editReply('The cash pass has been bought for ' + guildData.itemPrices[0] + ' curry cash!');
                                             newData.itemAmt++;
-                                            newData.balance = newData.balance - 27;
+                                            newData.balance = newData.balance - guildData.itemPrices[0];
                                             newData.inventory.push("cashpass");
                                             await newData.save();
                                         }
@@ -412,11 +381,11 @@ client.on('interactionCreate', (interaction) =>
                                 {
                                     if(guildData.enableItems[1])
                                     {
-                                        if(newData.balance >= 10)
+                                        if(newData.balance >= guildData.itemPrices[1])
                                         {
-                                            interaction.editReply('You payed 10 curry cash to invest! Outcome calculating...');
+                                            interaction.editReply('You payed ' + guildData.itemPrices[1] + ' curry cash to invest! Use item to get a random one...');
                                             newData.itemAmt++;
-                                            newData.balance = newData.balance - 10;
+                                            newData.balance = newData.balance - guildData.itemPrices[1];
                                             newData.inventory.push("invest");
                                             await newData.save();
                                         }
@@ -445,11 +414,11 @@ client.on('interactionCreate', (interaction) =>
                                 {
                                     if(guildData.enableItems[3])
                                     {
-                                        if(newData.balance >= 50)
+                                        if(newData.balance >= guildData.itemPrices[3])
                                         {
-                                            interaction.editReply('You payed 50 curry cash for a taskification! Easy money BOIII');
+                                            interaction.editReply('You payed ' + guildData.itemPrices[3] + ' curry cash for a taskification! Easy money BOIII');
                                             newData.itemAmt++;
-                                            newData.balance = newData.balance - 50;
+                                            newData.balance = newData.balance - guildData.itemPrices[3];
                                             newData.inventory.push("taskify");
                                             await newData.save();
                                         }
@@ -461,11 +430,11 @@ client.on('interactionCreate', (interaction) =>
                                 {
                                     if(guildData.enableItems[4])
                                     {
-                                        if(newData.balance >= 100)
+                                        if(newData.balance >= guildData.itemPrices[4])
                                         {
-                                            interaction.editReply('You payed 100 curry cash for a prestige! Use it knowing the consequences...');
+                                            interaction.editReply('You payed ' + guildData.itemPrices[4] + ' curry cash for a prestige! Use it knowing the consequences...');
                                             newData.itemAmt++;
-                                            newData.balance = newData.balance - 100;
+                                            newData.balance = newData.balance - guildData.itemPrices[4];
                                             newData.inventory.push("prestige");
                                             await newData.save();
                                         }
@@ -520,7 +489,7 @@ client.on('interactionCreate', (interaction) =>
                                 .addFields
                                 ({name: 'Next possible lower value', value: 'Stocks may drop to 2 curry cash'})
                                 .addFields
-                                ({name: 'Next possible higher value', value: 'Stocks may raise to 4 curry cash'});
+                                ({name: 'Next possible higher value', value: 'Stocks may raise to ' + guildData.itemPrices[2] + ' curry cash'});
 
                                 interaction.editReply({embeds: [embed]});
                             }
@@ -562,35 +531,35 @@ client.on('interactionCreate', (interaction) =>
                         {
                             embed.addFields
                             ({name: 'Cash Pass (cashpass in commands)', value: 'Will multiply the values of task income by 2x for \
-                            3 days. Can be stacked once to make a 4x multiplier that lasts 3 days but thats it. PRICE: 27 CURRY CASH'})
+                            3 days (doesnt affect custom tasks). Can be stacked once to make a 4x multiplier that lasts 3 days but thats it. PRICE: ' + guildData.itemPrices[0] + ' CURRY CASH'})
                         }
                         else{embed.addFields({name: 'Cash Pass', value: 'REMOVED'});}
                         if(guildData.enableItems[1])
                         {
                             embed.addFields
-                            ({name: 'Investment (invest in commands)', value: 'Will randomly choose an item from the shop, more expensive \
-                            = less chance. PRICE: 10 CURRY CASH'})
+                            ({name: 'Investment (invest in commands)', value: 'Will randomly choose an item from the shop (will not choose a custom item), more expensive \
+                            = less chance. PRICE: ' + guildData.itemPrices[1] + ' CURRY CASH'})
                         }
                         else{embed.addFields({name: 'Investment', value: 'REMOVED'});}
                         if(guildData.enableItems[2])
                         {
                             embed.addFields
                             ({name: 'Stocks (stocks in commands)', value: 'An item that will fluctuate in price and can be sold a day after buying with /use. \
-                            BASE PRICE: 15 CURRY CASH - CURRENT PRICE: ' + guildData.stockCosts})
+                            BASE PRICE: ' + guildData.itemPrices[2] + ' CURRY CASH - CURRENT PRICE: ' + guildData.stockCosts})
                         }
                         else{embed.addFields({name: 'Stocks', value: 'REMOVED'});}
                         if(guildData.enableItems[3])
                         {
                             embed.addFields
-                            ({name: 'Taskification (taskify in commands)', value: 'Halves task requirements until reset or prestige, but can only be bought once. \
-                            PRICE: 50 CURRY CASH'})
+                            ({name: 'Taskification (taskify in commands)', value: 'Halves task requirements until reset or prestige (doesnt affect custom tasks), but can only be bought once. \
+                            PRICE: ' + guildData.itemPrices[3] + ' CURRY CASH'})
                         }
                         else{embed.addFields({name: 'Taskification', value: 'REMOVED'});}
                         if(guildData.enableItems[4])
                         {
                             embed.addFields
-                            ({name: 'Prestige (prestige in commands)', value: 'Resets progress, but adds an extra .2x multiplier to task income each time. \
-                            PRICE: 100 CURRY CASH'})
+                            ({name: 'Prestige (prestige in commands)', value: 'Resets progress, but adds an extra .2x multiplier to task income each time (doesnt affect custom tasks). \
+                            PRICE: ' + guildData.itemPrices[4] + ' CURRY CASH'})
                         }
                         else{embed.addFields({name: 'Prestige', value: 'REMOVED'});}
                         for(var i = 0; i < guildData.customItemnames.length; i++)
@@ -632,7 +601,7 @@ client.on('interactionCreate', (interaction) =>
                         }
                         else
                         {
-                            interaction.deferReply();
+                            await interaction.deferReply();
                             newData2 = await Economy.findOne({userId: interaction.options.get('user').value});
                             if(!newData2){interaction.editReply('That user does not have an account!');}
                             else
@@ -726,36 +695,36 @@ client.on('interactionCreate', (interaction) =>
                                 if(guildData.enableTasks[0])
                                 {
                                     embed.addFields(
-                                    {name: 'Speaking', value: 'Be active on the server with 50 messages (25 messages with taskification), \
-                                    then 100, then 150 etc. to gain 5 curry cash. Youve posted ' + newData.msgCount + ' messages!! \
-                                    Every 50 messages the reward goes up by one, 100 = 6 cash, 150 = 7 cash, all \
-                                    the way up to 10 cash: 300 messages. Every 50 messages after that give 10 cash.'});
+                                    {name: 'Speaking', value: 'Be active on the server with an extra ' + guildData.taskRequirements[0] + ' messages (' + (guildData.taskRequirements[0] / 2) + ' messages with taskification) \
+                                    to gain 5 curry cash. Youve posted ' + newData.msgCount + ' messages!! \
+                                    Every conpletion the reward goes up by one, the 2nd completion give 6 cash, the 3rd completion gives 7 cash, all \
+                                    the way up to 10 cash, the 6th completion.'});
                                 }
                                 else{embed.addFields({name: 'Speaking', value: 'DISABLED'});}
                                 if(guildData.enableTasks[1])
                                 {
                                     embed.addFields(
-                                    {name: 'OG member', value: 'Stay on the server for a month (15 days with taskification), then two, \
-                                    then three etc. to gain 10 curry cash each time (time checked every message). Youve been on the server for '
+                                    {name: 'OG member', value: 'Stay on the server for an extra ' + guildData.taskRequirements[1] + ' days (' + (guildData.taskRequirements[1] / 2) + ' days with taskification) \
+                                    to gain 10 curry cash each time (the length of time that you stay on the server is checked every message). Youve been on the server for '
                                     + Math.round((Date.now() - interaction.member.joinedTimestamp) / 86400000) + ' days out of ' + Math.round(newData.reqTime * newData.taskMultiply / 86400000) + ' days!! \
-                                    Every month the amount will increase by 1, so 2 months = 11 cash, 3 months = 12 cash, all the \
-                                    way to 15 cash: 6 months. Every month after that gives 15 cash'});
+                                    Every completion the amount will increase by 1, so 2nd completion gives 11 cash, 3rd completion gives 12 cash, all the \
+                                    way to 15 cash, the 6th completions.'});
                                 }
                                 else{embed.addFields({name: 'OG member', value: 'DISABLED'});}
                                 if(guildData.enableTasks[2])
                                 {
                                     embed.addFields(
-                                    {name: 'Streak', value: 'Use the bot every day for a week (4 days with taskification) to get 10 curry cash. Your streak is at '
-                                    + newData.dailyStreak + "!! Every extra week in the streak gives \
-                                    2 more curry cash, so 2 week streak gives 12 cash, 3 weeks give 14 cash, all the way \
-                                    up to 20 cash which is a 6 week streak"});
+                                    {name: 'Streak', value: 'Use the bot every day for ' + guildData.taskRequirements[2] + ' days (' + (guildData.taskRequirements[2] / 2) + ' days with taskification) to get 10 curry cash. Your streak is at '
+                                    + newData.dailyStreak + "!! Every extra completion gives \
+                                    2 more curry cash, so 2nd completion gives 12 cash, 3rd completion gives 14 cash, all the way \
+                                    up to 20 cash which is the 6th completion"});
                                 }
                                 if(guildData.enableTasks[3])
                                 {
                                     embed.addFields(
-                                    {name: 'Media', value: 'Are you keen sharing media that you or others made? Post 12 embeds (6 embeds with taskification) to get 5 curry cash. Your embed count is at '
-                                    + newData.embedCount + "!! Every 12 embeds increases the reward by 2 cash, so 24 embeds gives 6 cash, \
-                                    36 embeds give 7 cash, all the way up to 10 cash which would need you to post 72 embeds."});
+                                    {name: 'Media', value: 'Are you keen sharing media that you or others made? Post ' + guildData.taskRequirements[3] + ' embeds (' + (guildData.taskRequirements[2] / 2) + ' embeds with taskification) to get 5 curry cash. Your embed count is at '
+                                    + newData.embedCount + "!! Every completion increases the reward by 1 cash, so 2nd completion gives 6 cash, \
+                                    3rd completion give 7 cash, all the way up to 10 cash which would need the 6th completion."});
                                 }
                                 else{embed.addFields({name: 'Media', value: 'DISABLED'});}
                                 embed.addFields(
@@ -812,7 +781,7 @@ client.on('interactionCreate', (interaction) =>
                                 .setColor('Random')
                                 .addFields(
                                 {name: 'You have no items', value: 'Empty inventory'});
-                                interaction.reply({embeds: [embed]});
+                                interaction.editReply({embeds: [embed]});
                             }
                             else
                             {
@@ -865,36 +834,41 @@ client.on('interactionCreate', (interaction) =>
                                     randNum = Math.random();
                                     if (randNum < 0.3 && guildData.enableItems[0])
                                     {
+                                        let index = newData.inventory.indexOf(interaction.options.get('item').value);
+                                        newData.inventory.splice(index, 1);
                                         newData.inventory.push('cashpass');
                                         interaction.editReply('The investment became a Cash Pass!');
                                     }
                                     else if(randNum < 0.8 && guildData.enableItems[2])
                                     {
+                                        let index = newData.inventory.indexOf(interaction.options.get('item').value);
+                                        newData.inventory.splice(index, 1);
                                         newData.inventory.push('stocks');
                                         newData.stockTimer = Date.now() + 86400000;
                                         interaction.editReply('The investment became Stocks!');
                                     }
                                     else if(randNum < 0.95 && guildData.enableItems[3])
                                     {
+                                        let index = newData.inventory.indexOf(interaction.options.get('item').value);
+                                        newData.inventory.splice(index, 1);
                                         newData.inventory.push('taskify')
                                         interaction.editReply('The investment became Taskification!');
                                     }
                                     else if(randNum < 1 && guildData.enableItems[4])
                                     {
+                                        let index = newData.inventory.indexOf(interaction.options.get('item').value);
+                                        newData.inventory.splice(index, 1);
                                         newData.inventory.push('prestige')
                                         interaction.editReply('The investment became Prestige!');
                                     }
                                     else
                                     {
-                                        newData.balance += 10;
-                                        interaction.editReply('All items except this are disabled, so heres your money back.');
+                                        interaction.editReply('The item rolled was disabled, roll again');
                                     }
-                                    let index = newData.inventory.indexOf(interaction.options.get('item').value);
-                                    newData.inventory.splice(index, 1);
                                 }
                                 else if(interaction.options.get('item').value == "stocks")
                                 {
-                                    if(Date.now() - newData.stockTimer < 0)
+                                    if(newData - Date.now() <= 0)
                                     {
                                         newData.balance += guildData.stockCosts;
                                         interaction.editReply('You were able to resell the stocks for ' + guildData.stockCosts + 'curry cash!');
@@ -1094,7 +1068,7 @@ client.on('interactionCreate', (interaction) =>
 
                     if(randNum < 0.33)
                     {
-                        await interaction.editReply({ files: ['./src/JUPITER.ogg'] });
+                        await interaction.editReply({ files: ['./JUPITER.ogg'] });
                     }
                     else if(randNum < 0.67)
                     {
@@ -1174,7 +1148,7 @@ client.on('interactionCreate', (interaction) =>
                         {
                             await interaction.deferReply();
                             guildData = await guildInfo.findOne({guildId: interaction.guild.id});
-                            if(guildData.bonusTasknames.length == 5)
+                            if(guildData.bonusTasknames.length == 10)
                             {
                                 interaction.editReply('Too many bonus tasks!');
                             }
@@ -1187,6 +1161,29 @@ client.on('interactionCreate', (interaction) =>
                             }
                         } 
                         catch (error) {console.log('Error: ' + error);}
+                    })();
+                }
+                else if(interaction.commandName == "edit-task")
+                {
+                    module.exports = (async (client, discord) =>
+                    {
+                        let guildData;
+                        try
+                        {
+                            await interaction.deferReply();
+                            guildData = await guildInfo.findOne({guildId: interaction.guild.id});
+                            if(guildData.enableTasks[interaction.options.get('task').value])
+                            {
+                                if(interaction.options.get('amount').value % 2 == 0)
+                                {
+                                    guildData.taskRequirements[interaction.options.get('task').value] = interaction.options.get('amount').value;
+                                    interaction.editReply('Set task ' + (interaction.options.get('task').value + 1) + ' requirement to ' + interaction.options.get('amount').value);
+                                    await guildData.save();
+                                }
+                                else{interaction.editReply('The amount is not even and cannot work with taskification... choose a different amount');}
+                            }
+                            else{interaction.editReply('That task is disabled!');}
+                        } catch (error) {console.log("Error: " + error);}
                     })();
                 }
                 else if(interaction.commandName == "admin-give-cash")
@@ -1358,6 +1355,25 @@ client.on('interactionCreate', (interaction) =>
                             await guildData.save();
                         } 
                         catch (error) {console.log('Error: ' + error);}
+                    })();
+                }
+                else if(interaction.commandName == "edit-shop")
+                {
+                    module.exports = (async (client, discord) =>
+                    {
+                        let guildData;
+                        try
+                        {
+                            await interaction.deferReply();
+                            guildData = await guildInfo.findOne({guildId: interaction.guild.id});
+                            if(guildData.enableItems[interaction.options.get('item').value])
+                            {
+                                guildData.itemPrices[interaction.options.get('item').value] = interaction.options.get('price').value;
+                                interaction.editReply('Set price of item ' + (interaction.options.get('item').value + 1) + ' to ' + interaction.options.get('price').value);
+                                await guildData.save();
+                            }
+                            else{interaction.editReply('That item is removed!');}
+                        } catch (error) {console.log("Error: " + error);}
                     })();
                 }
             }
